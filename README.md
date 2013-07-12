@@ -1,4 +1,6 @@
-gomi-module
-===========
+Zoop gomi-module
+================
 
-User module for zend framework 2
+[![Build Status](https://secure.travis-ci.org/zoopcommerce/gomi-module.png)](http://travis-ci.org/zoopcommerce/gomi-module)
+
+Zf2 user module

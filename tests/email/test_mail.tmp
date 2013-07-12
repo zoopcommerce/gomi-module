@@ -1,0 +1,10 @@
+Date: Fri, 12 Jul 2013 14:14:59 +1000
+From: zoop@gomimodule.dummy
+To: toby@awesome.com
+Subject: recover password
+
+You have been sent this email because a new password was requested for user: toby.
+
+To create your new password, please follow this link: /rest/recoverpasswordtoken/c57f5fcc465a6f50de07afe474f0fecaa58e85789384422643
+
+This link will remain active for 4 hours.
