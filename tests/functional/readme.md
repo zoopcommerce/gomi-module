@@ -1,0 +1,1 @@
+Point your browser at index.php in this directory to test the basic password change forms.

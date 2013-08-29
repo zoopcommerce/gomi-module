@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.4
+  - 5.5
+
+matrix:
+  allow_failures:
+    - php: 5.5
+
+before_script:
+  - composer install --dev
+
+script:
+  - cd ./tests
+  - ../vendor/bin/phpunit --coverage-clover ./build/clover.xml
+  - php build/coverage-checker.php build/clover.xml 25
+  - ../vendor/bin/phpcs --standard=PSR2 ../src/ ../tests/Zoop/

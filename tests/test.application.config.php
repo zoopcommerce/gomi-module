@@ -5,8 +5,7 @@ return array(
         'DoctrineModule',
         'DoctrineMongoODMModule',
         'Zoop\ShardModule',
-        'Zoop\GomiModule',
-        'Zoop\GatewayModule'
+        'Zoop\GomiModule'
     ),
     'module_listener_options' => array(
         'config_glob_paths'    => array(

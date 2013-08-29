@@ -42,27 +42,33 @@ class RecoverPasswordToken
      */
     protected $expires;
 
-    public function getCode() {
+    public function getCode()
+    {
         return $this->code;
     }
 
-    public function setCode($code) {
+    public function setCode($code)
+    {
         $this->code = $code;
     }
 
-    public function getUsername() {
+    public function getUsername()
+    {
         return $this->username;
     }
 
-    public function setUsername($username) {
+    public function setUsername($username)
+    {
         $this->username = (string) $username;
     }
 
-    public function getExpires() {
+    public function getExpires()
+    {
         return $this->expires;
     }
 
-    public function setExpires($expires) {
+    public function setExpires($expires)
+    {
         $this->expires = $expires;
     }
 }

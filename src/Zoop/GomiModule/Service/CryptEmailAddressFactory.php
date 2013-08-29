@@ -6,7 +6,7 @@
 
 namespace Zoop\GomiModule\Service;
 
-use Zoop\GomiModule\Crypt\Email;
+use Zoop\GomiModule\Crypt\EmailAddress;
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
@@ -16,17 +16,18 @@ use Zend\ServiceManager\ServiceLocatorInterface;
  * @version $Revision$
  * @author  Tim Roediger <superdweebie@gmail.com>
  */
-class CryptEmailFactory implements FactoryInterface
+class CryptEmailAddressFactory implements FactoryInterface
 {
 
     /**
      *
-     * @param \Zend\ServiceManager\ServiceLocatorInterface $serviceLocator
+     * @param  \Zend\ServiceManager\ServiceLocatorInterface $serviceLocator
      * @return object
      */
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
-        $options = $serviceLocator->get('config')['zoop']['gomi']['crypt_email'];
-        return new Email($options['key'], $options['salt']);
+        $options = $serviceLocator->get('config')['zoop']['gomi']['crypt_email_address'];
+
+        return new EmailAddress($options['key'], $options['salt']);
     }
 }

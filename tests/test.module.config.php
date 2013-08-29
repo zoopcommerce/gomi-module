@@ -19,10 +19,6 @@ return [
         ]
     ),
 
-//    'view_manager' => [
-//        'base_path' => 'http://testpath.com'
-//    ],
-
     'view_manager' => array(
         'display_not_found_reason' => true,
         'display_exceptions' => true,

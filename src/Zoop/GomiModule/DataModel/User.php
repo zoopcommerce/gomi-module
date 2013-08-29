@@ -58,8 +58,8 @@ class User implements
      * @ODM\String
      * @Shard\Serializer\Ignore("ignore_when_serializing")
      * @Shard\Crypt\BlockCipher(
-     *     key = "crypt.email",
-     *     salt = "crypt.email"
+     *     key = "crypt.emailaddress",
+     *     salt = "crypt.emailaddress"
      * )
      * @Shard\Validator\Chain({
      *     @Shard\Validator\Required,
@@ -68,27 +68,33 @@ class User implements
      */
     protected $email;
 
-    public function getFirstname() {
+    public function getFirstname()
+    {
         return $this->firstname;
     }
 
-    public function setFirstname($firstname) {
+    public function setFirstname($firstname)
+    {
         $this->firstname = $firstname;
     }
 
-    public function getLastname() {
+    public function getLastname()
+    {
         return $this->lastname;
     }
 
-    public function setLastname($lastname) {
+    public function setLastname($lastname)
+    {
         $this->lastname = $lastname;
     }
 
-    public function getEmail() {
+    public function getEmail()
+    {
         return $this->email;
     }
 
-    public function setEmail($email) {
+    public function setEmail($email)
+    {
         $this->email = (string) $email;
     }
 }

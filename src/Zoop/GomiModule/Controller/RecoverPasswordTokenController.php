@@ -5,17 +5,13 @@
  */
 namespace Zoop\GomiModule\Controller;
 
-use Zoop\Common\Crypt\Hash;
-use Zoop\Shard\Crypt\BlockCipherService;
-use Zoop\Shard\Crypt\Hash\BasicHashService;
 use Zoop\ShardModule\Controller\JsonRestfulController;
 use Zoop\GomiModule\DataModel\User;
 use Zoop\GomiModule\Exception;
-use Zend\Http\Header\Allow;
-use Zend\Http\Response;
 use Zend\Mail\Message;
 use Zend\Math\Rand;
 use Zend\View\Model\ViewModel;
+use Zend\View\Model\JsonModel;
 
 /**
  *
@@ -31,21 +27,26 @@ class RecoverPasswordTokenController extends JsonRestfulController
      * If the user is found in the db, a new token is created, and
      * that token is sent to the user's email.
      *
-     * @param type $data
+     * @param  type                           $data
      * @return type
      * @throws Exception\LoginFailedException
      */
-    public function create($data){
+    public function create($data)
+    {
+        $pieces = explode('/', $this->request->getUri()->getPath());
+        if ($pieces[count($pieces) - 1] !== $this->options->getEndpoint()->getName()) {
+            return $this->update($pieces[count($pieces) - 1], $data);
+        }
 
         $documentManager = $this->options->getDocumentManager();
         $userMetadata = $documentManager->getClassMetadata($this->options->getUserClass());
 
         $criteria = [];
-        if ( isset($data['username']) && ! $data['username'] == ''){
+        if (isset($data['username']) && ! $data['username'] == '') {
             $criteria['username'] = $data['username'];
         }
 
-        if ( isset($data['email']) && $data['email'] != ''){
+        if (isset($data['email']) && $data['email'] != '') {
 
             $metadata = $documentManager->getClassMetadata($this->options->getUserClass());
             $servicePrefix = 'shard.' . $this->options->getManifestName() . '.';
@@ -53,10 +54,12 @@ class RecoverPasswordTokenController extends JsonRestfulController
             $blockCipherServiceName = $metadata->crypt['blockCipher']['email']['service'];
             $blockCipherService = $this->serviceLocator->get($servicePrefix . $blockCipherServiceName);
 
-            $key = $this->serviceLocator->get($servicePrefix . $metadata->crypt['blockCipher']['email']['key'])->getKey();
+            $key = $this->serviceLocator
+                ->get($servicePrefix . $metadata->crypt['blockCipher']['email']['key'])->getKey();
 
-            if (isset($metadata->crypt['blockCipher']['email']['salt'])){
-                $salt = $this->serviceLocator->get($servicePrefix . $metadata->crypt['blockCipher']['email']['salt'])->getSalt();
+            if (isset($metadata->crypt['blockCipher']['email']['salt'])) {
+                $salt = $this->serviceLocator
+                    ->get($servicePrefix . $metadata->crypt['blockCipher']['email']['salt'])->getSalt();
             } else {
                 $salt = null;
             }
@@ -64,13 +67,13 @@ class RecoverPasswordTokenController extends JsonRestfulController
             $criteria['email'] = $blockCipherService->encryptValue($data['email'], $key, $salt);
         }
 
-        if (count($criteria) == 0){
+        if (count($criteria) == 0) {
             throw new Exception\InvalidArgumentException('Either username or email must be provided');
         }
 
         $userRepository = $documentManager->getRepository($this->options->getUserClass());
         $user = $userRepository->findOneBy($criteria);
-        if ( ! isset($user)){
+        if (! isset($user)) {
             throw new Exception\DocumentNotFoundException();
         }
 
@@ -87,11 +90,13 @@ class RecoverPasswordTokenController extends JsonRestfulController
             ->getQuery()
             ->execute();
 
-        parent::create([
-            'code' => $code,
-            'username' => $user->getUsername(),
-            'expires' => $expiry + time()
-        ]);
+        parent::create(
+            [
+                'code' => $code,
+                'username' => $user->getUsername(),
+                'expires' => $expiry + time()
+            ]
+        );
 
         //remove the Location header so the token isn't exposed in the response
         $headers = $this->response->getHeaders();
@@ -100,15 +105,18 @@ class RecoverPasswordTokenController extends JsonRestfulController
         $link = '/rest/' . $this->options->getEndpoint()->getName() . '/' . $code;
 
         // Create email body
-        $body = new ViewModel([
-            'username' => $user->getUsername(),
-            'link' => $link,
-            'hours' => $expiry / (60 * 60) //Convert expiry from seconds to hours
-        ]);
-        $body->setTemplate('email/recover-password');
+        $body = new ViewModel(
+            [
+                'username' => $user->getUsername(),
+                'link' => $link,
+                'hours' => $expiry / (60 * 60) //Convert expiry from seconds to hours
+            ]
+        );
+        $body->setTemplate($this->options->getEmailTemplate());
 
         //decrypt email
-        $blockCipherService = $this->options->getServiceLocator()->get($userMetadata->crypt['blockCipher']['email']['service']);
+        $blockCipherService = $this->options
+            ->getServiceLocator()->get($userMetadata->crypt['blockCipher']['email']['service']);
         $key = $this->options->getServiceLocator()->get($userMetadata->crypt['blockCipher']['email']['key'])->getKey();
         $plainEmail = $blockCipherService->decryptValue($user->getEmail(), $key);
 
@@ -121,19 +129,26 @@ class RecoverPasswordTokenController extends JsonRestfulController
 
         $this->options->getMailTransport()->send($mail);
 
-        $this->response->setStatusCode(201);
-        return $this->response;
+        $model = $this->acceptableViewModelSelector($this->options->getAcceptCriteria())->setVariables([]);
+        if ($model instanceof JsonModel) {
+            $this->response->setStatusCode(201);
+
+            return $this->response;
+        }
+        $model->setTemplate($this->options->getEmailSentTemplate());
+
+        return $model;
     }
 
     /**
      * This completes the password reset process.
      *
-     * @param type $code
-     * @param type $data
+     * @param  type $code
+     * @param  type $data
      * @return type
      */
-    public function update($id, $data) {
-
+    public function update($id, $data)
+    {
         $documentManager = $this->options->getDocumentManager();
         $token = $documentManager->createQueryBuilder($this->options->getDocumentClass())
             ->field('code')->equals($id)
@@ -141,11 +156,14 @@ class RecoverPasswordTokenController extends JsonRestfulController
             ->getQuery()
             ->getSingleResult();
 
-        if ( ! isset($token)){
+        if (! isset($token)) {
             throw new Exception\DocumentNotFoundException();
         }
 
-        $user = $documentManager->getRepository($this->options->getUserClass())->findOneBy(['username' => $token->getUsername()]);
+        $user = $documentManager
+            ->getRepository($this->options->getUserClass())
+            ->findOneBy(['username' => $token->getUsername()]);
+
         $user->setPassword($data['password']);
 
         //need to temporarily change user for AccessControl to allow update even though there is no authenticated user
@@ -158,35 +176,70 @@ class RecoverPasswordTokenController extends JsonRestfulController
         $this->flush();
         $sysUser->removeRole('sys::recoverpassword');
 
-        $this->response->setStatusCode(204);
-        return $this->response;
+        $model = $this->acceptableViewModelSelector($this->options->getAcceptCriteria())->setVariables([]);
+        if ($model instanceof JsonModel) {
+            $this->response->setStatusCode(204);
+
+            return $this->response;
+        }
+        $model->setTemplate($this->options->getRecoveryCompleteTemplate());
+
+        return $model;
     }
 
     /**
-     * Tokens cannot be listed
+     * Tokens cannot be replaced
      *
      * @return type
      */
-    public function getList(){
-        $allow = new Allow;
-        $allow->allowMethods(Response::POST);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function replaceList($data)
+    {
+        throw new Exception\MethodNotAllowedException;
     }
 
     /**
-     * Tokens cannot be got
+     * If json is requested, won't return anything, because a list of tokens shouldn't be visible.
+     * If html, return form to start password recovery
      *
-     * @param type $id
      * @return type
      */
-    public function get($id){
-        $allow = new Allow;
-        $allow->allowMethods(Response::PUT);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function getList()
+    {
+        $model = $this->acceptableViewModelSelector($this->options->getAcceptCriteria())->setVariables([]);
+        if ($model instanceof JsonModel) {
+            throw new Exception\MethodNotAllowedException;
+        }
+        $model->setTemplate($this->options->getStartRecoveryTemplate());
+
+        return $model;
+    }
+
+    /**
+     * Return form to complete password recovery
+     *
+     * @param  type $id
+     * @return type
+     */
+    public function get($id)
+    {
+        $model = $this->acceptableViewModelSelector($this->options->getAcceptCriteria())->setVariables([]);
+        if ($model instanceof JsonModel) {
+            throw new Exception\MethodNotAllowedException;
+        }
+
+        $documentManager = $this->options->getDocumentManager();
+        $token = $documentManager->createQueryBuilder($this->options->getDocumentClass())
+            ->field('code')->equals($id)
+            ->field('expires')->gt(new \DateTime)
+            ->getQuery()
+            ->getSingleResult();
+
+        if (! isset($token)) {
+            throw new Exception\DocumentNotFoundException();
+        }
+        $model->setTemplate($this->options->getNewPasswordTemplate());
+
+        return $model;
     }
 
     /**
@@ -194,12 +247,9 @@ class RecoverPasswordTokenController extends JsonRestfulController
      *
      * @param type $id
      */
-    public function deleteList() {
-        $allow = new Allow;
-        $allow->allowMethods(Response::POST);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function deleteList()
+    {
+        throw new Exception\MethodNotAllowedException;
     }
 
     /**
@@ -207,12 +257,9 @@ class RecoverPasswordTokenController extends JsonRestfulController
      *
      * @param type $id
      */
-    public function delete($id) {
-        $allow = new Allow;
-        $allow->allowMethods(Response::PUT);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function delete($id)
+    {
+        throw new Exception\MethodNotAllowedException;
     }
 
     /**
@@ -220,12 +267,9 @@ class RecoverPasswordTokenController extends JsonRestfulController
      *
      * @param type $id
      */
-    public function patchList($data) {
-        $allow = new Allow;
-        $allow->allowMethods(Response::POST);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function patchList($data)
+    {
+        throw new Exception\MethodNotAllowedException;
     }
 
     /**
@@ -233,11 +277,8 @@ class RecoverPasswordTokenController extends JsonRestfulController
      *
      * @param type $id
      */
-    public function patch($id, $data) {
-        $allow = new Allow;
-        $allow->allowMethods(Response::PUT);
-        $this->response->setStatusCode(405);
-        $this->response->getHeaders()->addHeader($allow);
-        return $this->response;
+    public function patch($id, $data)
+    {
+        throw new Exception\MethodNotAllowedException;
     }
 }
