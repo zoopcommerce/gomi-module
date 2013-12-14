@@ -57,14 +57,6 @@ return [
                         'extension.serializer'    => true,
                         'extension.validator'     => true,
                         'extension.crypt'         => true,
-                        'extension.rest'          => [
-                            'endpoint_map' => [
-                                'recoverpasswordtoken' => [
-                                    'class' => 'Zoop\GomiModule\DataModel\RecoverPasswordToken',
-                                    'property' => 'code'
-                                ]
-                            ]
-                        ]
                     ],
                     'service_manager_config' => [
                         'factories' => [
@@ -77,6 +69,14 @@ return [
                 ]
             ]
         ],
+        'rest' => [
+            'endpoint_map' => [
+                'recoverpasswordtoken' => [
+                    'class' => 'Zoop\GomiModule\DataModel\RecoverPasswordToken',
+                    'property' => 'code'
+                ]
+            ]
+        ]
     ],
 
     'controllers' => [
