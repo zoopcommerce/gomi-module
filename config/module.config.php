@@ -71,7 +71,7 @@ return [
                             'crypt.emailaddress' => 'Zoop\GomiModule\Service\CryptEmailAddressFactory'
                         ]
                     ],
-                    'documents' => [
+                    'models' => [
                         'Zoop\GomiModule\DataModel' => __DIR__ . '/../src/Zoop/GomiModule/DataModel'
                     ]
                 ]
