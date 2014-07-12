@@ -5,7 +5,7 @@
  */
 namespace Zoop\GomiModule\Controller;
 
-use Zoop\ShardModule\Controller\JsonRestfulController;
+use Zoop\ShardModule\Controller\RestfulController;
 use Zoop\GomiModule\DataModel\User;
 use Zoop\GomiModule\Exception;
 use Zend\Mail\Message;
@@ -19,7 +19,7 @@ use Zend\View\Model\JsonModel;
  * @version $Revision$
  * @author  Tim Roediger <superdweebie@gmail.com>
  */
-class RecoverPasswordTokenController extends JsonRestfulController
+class RecoverPasswordTokenController extends RestfulController
 {
 
     /**

@@ -23,7 +23,6 @@ use Zoop\Shard\Annotation\Annotations as Shard;
  * @author  Tim Roediger <superdweebie@gmail.com>
  *
  * @ODM\Document
- * @Shard\Serializer\ClassName
  * @Shard\AccessControl({
  *     @Shard\Permission\Basic(roles="*",                    allow={"read", "create"}                      ),
  *     @Shard\Permission\Basic(roles="owner",                allow="update::*",        deny="update::roles"),

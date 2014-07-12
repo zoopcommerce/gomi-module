@@ -11,7 +11,7 @@ return [
         'odm' => [
             'configuration' => array(
                 'default' => array(
-                    'default_db'   => 'gomiModuleTest',
+                    'default_db'   => 'gomi-test',
                     'proxy_dir'    => __DIR__ . '/Proxy',
                     'hydrator_dir' => __DIR__ . '/Hydrator',
                 )
