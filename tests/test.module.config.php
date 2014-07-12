@@ -26,10 +26,10 @@ return [
 
     'service_manager' => array(
         'factories' => array(
-            'Zoop\GomiModule\MailTransport\File' => function(){
+            'Zoop\GomiModule\MailTransport\File' => function () {
                 return new \Zend\Mail\Transport\File(new \Zend\Mail\Transport\FileOptions([
                     'path' => __DIR__ . '/email',
-                    'callback' => function(){return 'test_mail.tmp';}
+                    'callback' => function () {return 'test_mail.tmp';}
                 ]));
             },
         ),

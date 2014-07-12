@@ -62,7 +62,39 @@ return [
                     'recoverpasswordtoken' => [
                         'manifest' => 'default',
                         'class' => 'Zoop\GomiModule\DataModel\RecoverPasswordToken',
-                        'property' => 'code'
+                        'property' => 'code',
+                        'listeners' => [
+                            'create' => [
+                                'zoop.gomi.listener.unserialize',
+                                'zoop.gomi.listener.create',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.location',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'delete' => [],
+                            'deleteList' => [],
+                            'get' => [
+                                'zoop.shardmodule.listener.get',
+                                'zoop.shardmodule.listener.serialize',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'getList' => [
+                                'zoop.shardmodule.listener.getlist',
+                                'zoop.shardmodule.listener.serialize',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'patch' => [],
+                            'patchList' => [],
+                            'update' => [
+                                'zoop.shardmodule.listener.unserialize',
+                                'zoop.shardmodule.listener.idchange',
+                                'zoop.shardmodule.listener.update',
+                                'zoop.shardmodule.listener.flush',
+                                'zoop.shardmodule.listener.prepareviewmodel'
+                            ],
+                            'replaceList' => [],
+                            'options' => [],
+                        ],
                     ]
                 ]
             ]
@@ -71,6 +103,12 @@ return [
     'controllers' => [
         'factories' => [
             'rest.default.recoverpasswordtoken' => 'Zoop\GomiModule\Service\RecoverPasswordTokenControllerFactory'
+        ],
+    ],
+    'service_manager' => [
+        'invokables' => [
+            'zoop.gomi.listener.unserialize' => 'Zoop\GomiModule\Controller\Listener\UnserializeListener',
+            'zoop.gomi.listener.create' => 'Zoop\GomiModule\Controller\Listener\CreateListener',
         ],
     ],
     'view_manager' => [

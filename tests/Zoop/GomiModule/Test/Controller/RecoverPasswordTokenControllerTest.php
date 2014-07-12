@@ -31,7 +31,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         $this->documentManager = $this->getApplicationServiceLocator()->get('shard.default.modelmanager');
         static::$staticDocumentManager = $this->documentManager;
-        
+
         $eventManager = self::$staticDocumentManager->getEventManager();
         $eventManager->addEventListener(Events::EXCEPTION, $this);
 
@@ -144,7 +144,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 //    {
 //        $this->getRequest()
 //            ->setMethod('GET');
-//         
+//
 //        $this->dispatch('/rest/recoverpasswordtoken');
 //
 //        $response = $this->getResponse();

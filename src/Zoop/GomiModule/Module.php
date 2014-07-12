@@ -22,12 +22,12 @@ class Module
     {
         return include __DIR__ . '/../../../config/module.config.php';
     }
-    
-    public function onBootstrap(MvcEvent $e) 
-    { 
-        $events = $e->getTarget()->getEventManager(); 
-        $events->attach('dispatch.error', array($this, 
-'onDispatchError'), 100); 
+
+    public function onBootstrap(MvcEvent $e)
+    {
+        $events = $e->getTarget()->getEventManager();
+        $events->attach('dispatch.error', array($this,
+'onDispatchError'), 100);
     }
 
     public function onDispatchError(MvcEvent $e)
