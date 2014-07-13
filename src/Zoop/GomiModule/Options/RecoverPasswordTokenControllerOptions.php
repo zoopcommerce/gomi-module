@@ -16,7 +16,6 @@ use Zend\View\Renderer\PhpRenderer;
  */
 class RecoverPasswordTokenControllerOptions extends RestfulControllerOptions
 {
-
     protected $userClass;
 
     protected $mailTransport;

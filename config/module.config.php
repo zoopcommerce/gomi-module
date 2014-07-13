@@ -5,9 +5,6 @@ return [
         'gomi' => [
             //These are all the config options that control the password chagne and recovery system
             'recover_password_token_controller_options' => [
-
-                //name of the shard manifest to use for db operations
-                'manifest_name' => 'default',
                 //the FQCN of the user model
                 'user_class' => 'Zoop\GomiModule\DataModel\User',
                 //should be the same as the endpoint defined in the shard endpoint_map below
@@ -58,6 +55,10 @@ return [
                 ]
             ],
             'rest' => [
+                'options_class' => 'Zoop\GomiModule\Options\RecoverPasswordTokenControllerOptions',
+                'templates' => [
+                    'create' => 'zoop/gomi/email-sent',
+                ],
                 'rest' => [
                     'recoverpasswordtoken' => [
                         'manifest' => 'default',
@@ -66,9 +67,9 @@ return [
                         'listeners' => [
                             'create' => [
                                 'zoop.gomi.listener.unserialize',
-                                'zoop.gomi.listener.create',
+                                'zoop.shardmodule.listener.create',
                                 'zoop.shardmodule.listener.flush',
-                                'zoop.shardmodule.listener.location',
+                                'zoop.gomi.listener.email',
                                 'zoop.shardmodule.listener.prepareviewmodel'
                             ],
                             'delete' => [],
@@ -86,11 +87,8 @@ return [
                             'patch' => [],
                             'patchList' => [],
                             'update' => [
-                                'zoop.shardmodule.listener.unserialize',
-                                'zoop.shardmodule.listener.idchange',
-                                'zoop.shardmodule.listener.update',
-                                'zoop.shardmodule.listener.flush',
-                                'zoop.shardmodule.listener.prepareviewmodel'
+                                'zoop.gomi.listener.unserialize',
+                                'zoop.gomi.listener.prepareviewmodel'
                             ],
                             'replaceList' => [],
                             'options' => [],
@@ -100,15 +98,14 @@ return [
             ]
         ]
     ],
-    'controllers' => [
-        'factories' => [
-            'rest.default.recoverpasswordtoken' => 'Zoop\GomiModule\Service\RecoverPasswordTokenControllerFactory'
-        ],
-    ],
     'service_manager' => [
+        'factories' => [
+        ],
         'invokables' => [
             'zoop.gomi.listener.unserialize' => 'Zoop\GomiModule\Controller\Listener\UnserializeListener',
-            'zoop.gomi.listener.create' => 'Zoop\GomiModule\Controller\Listener\CreateListener',
+            'zoop.gomi.listener.email' => 'Zoop\GomiModule\Controller\Listener\EmailListener',
+            'zoop.shardmodule.restcontrollermap' => 'Zoop\GomiModule\RestControllerMap',
+            'zoop.gomi.listener.prepareviewmodel' => 'Zoop\GomiModule\Controller\Listener\PrepareViewModelListener',
         ],
     ],
     'view_manager' => [

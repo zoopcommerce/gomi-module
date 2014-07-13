@@ -2,61 +2,28 @@
 
 namespace Zoop\GomiModule\Controller\Listener;
 
-use Doctrine\ODM\MongoDB\DocumentManager;
+use \DateTime;
 use Zend\Math\Rand;
 use Zend\Mvc\MvcEvent;
-use Zend\ServiceManager\ServiceManager;
+use Zoop\GomiModule\DataModel\User;
 use Zoop\GomiModule\Exception;
+use Zoop\GomiModule\Controller\Listener\ListenerHelperTrait;
 use Zoop\Shard\Serializer\Unserializer;
 use Zoop\ShardModule\Controller\Result;
 use Zoop\ShardModule\Controller\Listener\UnserializeListener as ShardUnserializeListener;
-use Zoop\ShardModule\Options\RestfulControllerOptions;
 
 /**
  * @author  Josh Stuart <josh.stuart@zoopcommerce.com>
  */
 class UnserializeListener extends ShardUnserializeListener
 {
-    protected $dm;
-    protected $sm;
-    protected $options;
-    protected $modelClass;
-    protected $userClass;
-    protected $manifestName;
-    protected $config;
-
-    protected function init(MvcEvent $event)
-    {
-        $options = $event->getTarget()->getOptions();
-        $this->setOptions($options);
-
-        $dm = $options->getModelManager();
-        $this->setDm($dm);
-
-        $sm = $options->getServiceLocator();
-        $this->setSm($sm);
-
-        $modelClass = $options->getClass();
-        $this->setModelClass($modelClass);
-
-        $manifestName = $options->getManifest()->getName();
-        $this->setManifestName($manifestName);
-    }
+    use ListenerHelperTrait;
 
     public function create(MvcEvent $event)
     {
-        $this->init($event);
-        $data = $event->getParam('data');
+        $this->initHelpers($event);
 
-        $criteria = $this->getCriteria($data);
-
-        $userRepository = $this->getDm()
-            ->getRepository($this->getUserClass());
-
-        $user = $userRepository->findOneBy($criteria);
-        if (!isset($user)) {
-            throw new Exception\DocumentNotFoundException();
-        }
+        $user = $this->getUser($event);
 
         $code = $this->createUniqueCode();
         $expiry = $this->getExpiry();
@@ -64,11 +31,11 @@ class UnserializeListener extends ShardUnserializeListener
         //clear existing
         $this->deleteExistingToken($user);
 
-        $event->setParam('data', array(
+        $event->setParam('data', [
             'code' => $code,
             'username' => $user->getUsername(),
             'expires' => $expiry
-        ));
+        ]);
 
         $result = new Result(
             $event->getTarget()
@@ -87,166 +54,89 @@ class UnserializeListener extends ShardUnserializeListener
 
         return $result;
     }
-
-    protected function getCriteria($data = array())
+    
+    /**
+     * 
+     * @param \Zend\Mvc\MvcEvent $event
+     * @return type
+     */
+    public function update(MvcEvent $event)
     {
-        $criteria = [];
-
-        if (isset($data['username']) && !$data['username'] == '') {
-            $criteria['username'] = $data['username'];
-        }
-
-        if (isset($data['email']) && $data['email'] != '') {
-            $metadata = $this->getDm()
-                ->getClassMetadata($this->getUserClass());
-
-            $servicePrefix = 'shard.' . $this->getManifestName() . '.';
-
-            $crypt = $metadata->getCrypt();
-            $blockCipherServiceName = $crypt['blockCipher']['email']['service'];
-            $blockCipherService = $this->getSm()
-                ->get($servicePrefix . $blockCipherServiceName);
-
-            $key = $this->getSm()
-                ->get($servicePrefix . $crypt['blockCipher']['email']['key'])->getKey();
-
-            if (isset($crypt['blockCipher']['email']['salt'])) {
-                $salt = $this->getSm()
-                    ->get($servicePrefix . $crypt['blockCipher']['email']['salt'])->getSalt();
-            } else {
-                $salt = null;
-            }
-
-            $criteria['email'] = $blockCipherService->encryptValue($data['email'], $key, $salt);
-        }
-
-        if (count($criteria) == 0) {
-            throw new Exception\InvalidArgumentException('Either username or email must be provided');
-        }
-
-        return $criteria;
+        $this->initHelpers($event);
+        $id = $event->getParam('id');
+        
+        $token = $this->getToken($id);
+        
+        $data = $event->getParam('data');
+        $data['username'] = $token->getUsername();
+        $event->setParam('data', $data);
+        
+        $user = $this->getUser($event);
+        $user->setPassword($data['password']);
+        
+        $this->flush($token);
+        
+        //change response to success
+        $event->getResponse()->setStatusCode(200);
+        
+        return new Result();
     }
+    
+    /**
+     * Gets the password reset token model
+     * 
+     * @param string $id
+     * @return mixed
+     * @throws Exception\DocumentNotFoundException
+     */
+    protected function getToken($id)
+    {
+        $documentManager = $this->getDocumentManager();
+        
+        $token = $documentManager->createQueryBuilder(
+                $this->getOptions()->getClass()
+            )
+            ->field('code')->equals($id)
+            ->field('expires')->gt(new DateTime)
+            ->getQuery()
+            ->getSingleResult();
 
+        if (! isset($token)) {
+            throw new Exception\DocumentNotFoundException();
+        }
+        
+        return $token;
+    }
+    
+    /**
+     * Creates a temporary system user with elevated privileges
+     * so that the token can be removed and the user password
+     * reset, despite having no authenticated user.
+     * 
+     * @param mixed $token
+     */
+    protected function flush($token)
+    {
+        $documentManager = $this->getDocumentManager();
+        
+        $sysUser = new User;
+        $sysUser->addRole('sys::recoverpassword');
+        $serviceLocator = $this->options->getServiceLocator();
+        $serviceLocator->setService('user', $sysUser);
+
+        $documentManager->remove($token);
+        $documentManager->flush();
+        
+        $sysUser->removeRole('sys::recoverpassword');
+    }
+    
+    /**
+     * Create a unique code to reset password with
+     * 
+     * @return string
+     */
     protected function createUniqueCode()
     {
         return 'c' . substr(bin2hex(Rand::getBytes(30)), 0, 49);
-    }
-
-    protected function deleteExistingToken($user)
-    {
-        $this->getDm()
-            ->createQueryBuilder($this->getUserClass())
-            ->remove()
-            ->field('username')->equals($user->getUsername())
-            ->getQuery()
-            ->execute();
-    }
-
-    /**
-     * @return DocumentManager
-     */
-    public function getDm()
-    {
-        return $this->dm;
-    }
-
-    /**
-     * @param DocumentManager $dm
-     */
-    public function setDm(DocumentManager $dm)
-    {
-        $this->dm = $dm;
-    }
-
-    /**
-     * @return RestfulControllerOptions
-     */
-    public function getOptions()
-    {
-        return $this->options;
-    }
-
-    /**
-     * @param RestfulControllerOptions $options
-     */
-    public function setOptions(RestfulControllerOptions $options)
-    {
-        $this->options = $options;
-    }
-
-    /**
-     * @param ServiceManager $sm
-     */
-    public function setSm(ServiceManager $sm)
-    {
-        $this->sm = $sm;
-    }
-
-    /**
-     *
-     * @return ServiceManager
-     */
-    public function getSm()
-    {
-        return $this->sm;
-    }
-
-    /**
-     * @return string
-     */
-    public function getModelClass()
-    {
-        return $this->modelClass;
-    }
-
-    /**
-     * @param string $modelClass
-     */
-    public function setModelClass($modelClass)
-    {
-        $this->modelClass = $modelClass;
-    }
-
-    /**
-     * @return string
-     */
-    public function getManifestName()
-    {
-        return $this->manifestName;
-    }
-
-    /**
-     * @param string $manifestName
-     */
-    public function setManifestName($manifestName)
-    {
-        $this->manifestName = $manifestName;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUserClass()
-    {
-        return $this->getConfig()['user_class'];
-    }
-
-    /**
-     * @return string
-     */
-    public function getExpiry()
-    {
-        return $this->getConfig()['expiry'];
-    }
-
-    /**
-     * @return array
-     */
-    public function getConfig()
-    {
-        if(!isset($this->config)) {
-            $this->config = $this->getSm()->get('config')['zoop']['gomi']['recover_password_token_controller_options'];
-        }
-        return $this->config;
     }
 }
