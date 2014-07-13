@@ -4,10 +4,10 @@ namespace Zoop\GomiModule\Controller\Listener;
 
 use Zend\Mail\Message;
 use Zend\Mvc\MvcEvent;
-use Zend\View\Model\JsonModel;
 use Zend\View\Model\ViewModel;
 use Zoop\GomiModule\Exception;
 use Zoop\GomiModule\Controller\Listener\ListenerHelperTrait;
+use Zoop\ShardModule\Controller\Result;
 
 /**
  * @author  Josh Stuart <josh.stuart@zoopcommerce.com>
@@ -15,59 +15,67 @@ use Zoop\GomiModule\Controller\Listener\ListenerHelperTrait;
 class EmailListener
 {
     use ListenerHelperTrait;
-    
+
+    /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @param string $name
+     * @param array $args
+     * @return Result
+     */
     public function __call($name, $args)
     {
         return $this->email($args[0]);
     }
 
+    /**
+     *
+     * @param MvcEvent $event
+     * @return Result
+     */
     protected function email(MvcEvent $event)
     {
         $this->initHelpers($event);
-        
+
         $body = $this->createEmailBody($event);
-        
-        $sent = $this->send($event, $body);
-        
+
+        $this->sendEmail($event, $body);
+
         return $event->getResult();
     }
-    
+
     /**
      * Sends the reset email
-     * 
+     *
      * @param MvcEvent $event
      * @param ViewModel $body
      * @return boolean
      */
-    protected function send(MvcEvent $event, ViewModel $body)
+    protected function sendEmail(MvcEvent $event, ViewModel $body)
     {
         $options = $this->getOptions();
         $user = $this->getUser($event);
-        
-        if(!isset($user)) {
+
+        if (!isset($user)) {
             throw new Exception\DocumentNotFoundException();
         }
-        
+
         $plainEmail = $this->getPlainTextEmail($user->getEmail());
-        
+
         $subject = $options->getMailSubject();
         $from = $options->getMailFrom();
         $mailTransport = $options->getMailTransport();
 
         // Send the email
         $mail = new Message();
-        $mail->setBody(
-                $options
-                    ->getEmailRenderer()
-                    ->render($body)
-            )
+        $mail->setBody($options->getEmailRenderer()->render($body))
             ->setFrom($from)
             ->addTo($plainEmail)
             ->setSubject($subject);
 
         return $mailTransport->send($mail);
     }
-    
+
     /**
      * Un-encrypt the email field
      * @param string $email
@@ -77,22 +85,22 @@ class EmailListener
     {
         $metadata = $this->getDocumentManager()
             ->getClassMetadata($this->getUserClassName());
-        
+
         $servicePrefix = 'shard.' . $this->getManifestName() . '.';
 
         $crypt = $metadata->getCrypt();
         $blockCipherServiceName = $crypt['blockCipher']['email']['service'];
         $blockCipherService = $this->getSm()
             ->get($servicePrefix . $blockCipherServiceName);
-         
+
         $key = $this->getSm()
             ->get($servicePrefix . $crypt['blockCipher']['email']['key'])->getKey();
-        
+
         $plainEmail = $blockCipherService->decryptValue($email, $key);
-        
+
         return $plainEmail;
     }
-    
+
     /**
      * Creates an email body
      * @param MvcEvent $event
@@ -102,7 +110,7 @@ class EmailListener
     {
         $model = $event->getResult()->getModel();
         $link = sprintf('/rest/%s/%s', $this->getOptions()->getEndpoint(), $model->getCode());
-        
+
         $body = new ViewModel(
             [
                 'username' => $model->getUsername(),
@@ -110,12 +118,12 @@ class EmailListener
                 'hours' => $model->getExpires() / (60 * 60) //Convert expiry from seconds to hours
             ]
         );
-        
+
         $body->setTemplate(
             $this->getOptions()
                 ->getEmailTemplate()
         );
-        
+
         return $body;
     }
 }

@@ -5,6 +5,7 @@ namespace Zoop\GomiModule\Controller\Listener;
 use Zend\Mvc\MvcEvent;
 use Zend\View\Model\JsonModel;
 use Zoop\ShardModule\Controller\Listener\PrepareViewModelListener as ShardPrepareViewModelListener;
+use Zoop\ShardModule\Controller\Result;
 
 /**
  * @author  Josh Stuart <josh.stuart@zoopcommerce.com>
@@ -18,6 +19,9 @@ class PrepareViewModelListener extends ShardPrepareViewModelListener
         }
 
         $result = $event->getResult();
+        if (!isset($result)) {
+            $result = new Result();
+        }
 
         $response = $event->getResponse();
         $response->setStatusCode($result->getStatusCode());

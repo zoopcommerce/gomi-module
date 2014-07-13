@@ -54,9 +54,9 @@ class UnserializeListener extends ShardUnserializeListener
 
         return $result;
     }
-    
+
     /**
-     * 
+     *
      * @param \Zend\Mvc\MvcEvent $event
      * @return type
      */
@@ -64,38 +64,35 @@ class UnserializeListener extends ShardUnserializeListener
     {
         $this->initHelpers($event);
         $id = $event->getParam('id');
-        
+
         $token = $this->getToken($id);
-        
+
         $data = $event->getParam('data');
         $data['username'] = $token->getUsername();
         $event->setParam('data', $data);
-        
+
         $user = $this->getUser($event);
         $user->setPassword($data['password']);
-        
+
         $this->flush($token);
-        
+
         //change response to success
         $event->getResponse()->setStatusCode(200);
-        
+
         return new Result();
     }
-    
+
     /**
      * Gets the password reset token model
-     * 
+     *
      * @param string $id
      * @return mixed
      * @throws Exception\DocumentNotFoundException
      */
     protected function getToken($id)
     {
-        $documentManager = $this->getDocumentManager();
-        
-        $token = $documentManager->createQueryBuilder(
-                $this->getOptions()->getClass()
-            )
+        $token = $this->getDocumentManager()
+            ->createQueryBuilder($this->getOptions()->getClass())
             ->field('code')->equals($id)
             ->field('expires')->gt(new DateTime)
             ->getQuery()
@@ -104,21 +101,21 @@ class UnserializeListener extends ShardUnserializeListener
         if (! isset($token)) {
             throw new Exception\DocumentNotFoundException();
         }
-        
+
         return $token;
     }
-    
+
     /**
      * Creates a temporary system user with elevated privileges
      * so that the token can be removed and the user password
      * reset, despite having no authenticated user.
-     * 
+     *
      * @param mixed $token
      */
     protected function flush($token)
     {
         $documentManager = $this->getDocumentManager();
-        
+
         $sysUser = new User;
         $sysUser->addRole('sys::recoverpassword');
         $serviceLocator = $this->options->getServiceLocator();
@@ -126,13 +123,13 @@ class UnserializeListener extends ShardUnserializeListener
 
         $documentManager->remove($token);
         $documentManager->flush();
-        
+
         $sysUser->removeRole('sys::recoverpassword');
     }
-    
+
     /**
      * Create a unique code to reset password with
-     * 
+     *
      * @return string
      */
     protected function createUniqueCode()

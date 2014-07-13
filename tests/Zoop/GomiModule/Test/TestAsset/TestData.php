@@ -17,7 +17,7 @@ class TestData
         $user->setLastName('Awesome');
         $user->setPassword('password1');
         $user->setEmail('toby@awesome.com');
-        $user->setSalt('AwesomeAwesomeAwesomeAwesomeAwesome');
+//        $user->setSalt('AwesomeAwesomeAwesomeAwesomeAwesome');
         $documentManager->persist($user);
         $documentManager->flush();
         $documentManager->clear();

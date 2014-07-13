@@ -9,6 +9,7 @@ namespace Zoop\GomiModule;
 
 use Zend\View\Model\JsonModel;
 use Zend\Mvc\MvcEvent;
+
 /**
  *
  * @license MIT
@@ -23,21 +24,20 @@ class Module
         return include __DIR__ . '/../../../config/module.config.php';
     }
 
-    public function onBootstrap(MvcEvent $e)
+    public function onBootstrap(MvcEvent $event)
     {
-        $events = $e->getTarget()->getEventManager();
-        $events->attach('dispatch.error', array($this,
-'onDispatchError'), 100);
+        $events = $event->getTarget()->getEventManager();
+        $events->attach('dispatch.error', array($this, 'onDispatchError'), 100);
     }
 
-    public function onDispatchError(MvcEvent $e)
+    public function onDispatchError(MvcEvent $event)
     {
-        $error = $e->getError();
+        $error = $event->getError();
         if (!$error) {
             return;
         }
 
-        $request = $e->getRequest();
+        $request = $event->getRequest();
         $headers = $request->getHeaders();
         if (!$headers->has('Accept')) {
             return;
@@ -50,8 +50,8 @@ class Module
 
         $model = new JsonModel();
 
-        $e->setResult($model);
-        $e->stopPropagation();
+        $event->setResult($model);
+        $event->stopPropagation();
         return $model;
     }
 }

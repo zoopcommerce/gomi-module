@@ -36,7 +36,6 @@ class User implements
     UserInterface,
     RoleAwareUserInterface
 {
-
     use PasswordTrait;
     use UserTrait;
     use RoleAwareUserTrait;

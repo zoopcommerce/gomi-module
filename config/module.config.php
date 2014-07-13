@@ -1,5 +1,7 @@
 <?php
 
+use Zoop\GomiModule\DataModel\User;
+
 return [
     'zoop' => [
         'gomi' => [
@@ -46,7 +48,14 @@ return [
                     ],
                     'service_manager_config' => [
                         'factories' => [
-                            'crypt.emailaddress' => 'Zoop\GomiModule\Service\CryptEmailAddressFactory'
+                            'crypt.emailaddress' => 'Zoop\GomiModule\Service\CryptEmailAddressFactory',
+                            'user' => function () {
+                                $user = new User();
+                                $user->setUsername('toby');
+                                $user->addRole('admin');
+
+                                return $user;
+                            }
                         ]
                     ],
                     'models' => [
@@ -58,6 +67,9 @@ return [
                 'options_class' => 'Zoop\GomiModule\Options\RecoverPasswordTokenControllerOptions',
                 'templates' => [
                     'create' => 'zoop/gomi/email-sent',
+                    'get' => 'zoop/gomi/new-password',
+                    'getList' => 'zoop/gomi/start-recovery',
+                    'update' => 'zoop/gomi/recovery-complete',
                 ],
                 'rest' => [
                     'recoverpasswordtoken' => [
@@ -75,14 +87,10 @@ return [
                             'delete' => [],
                             'deleteList' => [],
                             'get' => [
-                                'zoop.shardmodule.listener.get',
-                                'zoop.shardmodule.listener.serialize',
-                                'zoop.shardmodule.listener.prepareviewmodel'
+                                'zoop.gomi.listener.prepareviewmodel'
                             ],
                             'getList' => [
-                                'zoop.shardmodule.listener.getlist',
-                                'zoop.shardmodule.listener.serialize',
-                                'zoop.shardmodule.listener.prepareviewmodel'
+                                'zoop.gomi.listener.prepareviewmodel'
                             ],
                             'patch' => [],
                             'patchList' => [],

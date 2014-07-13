@@ -20,7 +20,7 @@ class RestControllerMap extends ShardRestControllerMap implements ServiceLocator
 {
     /**
      * Merges the gomi and shard module configs
-     * 
+     *
      * @return array
      */
     protected function getConfig()
@@ -28,10 +28,10 @@ class RestControllerMap extends ShardRestControllerMap implements ServiceLocator
         if (!isset($this->config)) {
             $gomiOptions = $this->serviceLocator
                 ->get('config')['zoop']['gomi']['recover_password_token_controller_options'];
-            
+
             $shardOptions = $this->serviceLocator
                 ->get('config')['zoop']['shard']['rest'];
-            
+
             $this->config = array_merge($gomiOptions, $shardOptions);
         }
 

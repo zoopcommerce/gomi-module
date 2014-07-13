@@ -85,7 +85,7 @@ trait ListenerHelperTrait
     {
         return $this->getOptions()->getExpiry();
     }
-    
+
     /**
      * @param MvcEvent $event
      * @return mixed User
@@ -94,22 +94,22 @@ trait ListenerHelperTrait
     {
         $data = $event->getParam('data');
         $criteria = $this->getUserCriteria($data);
-        
+
         $userRepository = $this->getDocumentManager()
             ->getRepository($this->getUserClassName());
 
         $user = $userRepository->findOneBy($criteria);
-        
+
         if (!isset($user)) {
             throw new Exception\DocumentNotFoundException();
         }
-        
+
         return $user;
     }
 
     /**
      * Deletes a token from an existing user
-     * 
+     *
      * @param mixed $user
      */
     protected function deleteExistingToken($user)
@@ -124,7 +124,7 @@ trait ListenerHelperTrait
 
     /**
      * Gets the criteria for selecting a user from the user collection
-     * 
+     *
      * @param array $data
      */
     protected function getUserCriteria(array $data = [])
