@@ -24,10 +24,10 @@ use Zoop\Shard\Annotation\Annotations as Shard;
  *
  * @ODM\Document
  * @Shard\AccessControl({
- *     @Shard\Permission\Basic(roles="*",                    allow={"read", "create"}                      ),
- *     @Shard\Permission\Basic(roles="owner",                allow="update::*",        deny="update::roles"),
- *     @Shard\Permission\Basic(roles="sys::recoverpassword", allow="update::password"                      ),
- *     @Shard\Permission\Basic(roles="admin",                allow={"delete", "update::*"}                 )
+ *     @Shard\Permission\Basic(roles="*",                    allow={"read", "create"}                       ),
+ *     @Shard\Permission\Basic(roles="owner",                allow="update::*",         deny="update::roles"),
+ *     @Shard\Permission\Basic(roles="sys::recoverpassword", allow="update::password"                       ),
+ *     @Shard\Permission\Basic(roles="admin",                allow={"delete", "update::*"}                  )
  * })
  *
  */
@@ -47,7 +47,7 @@ class User implements
     protected $firstname;
 
     /**
-     * @ODM\Field(type="string")
+     * @ODM\String
      * @Shard\Validator\Required
      */
     protected $lastname;

@@ -1,7 +1,5 @@
 <?php
 
-use Zoop\GomiModule\DataModel\User;
-
 return [
     'zoop' => [
         'gomi' => [
@@ -49,13 +47,6 @@ return [
                     'service_manager_config' => [
                         'factories' => [
                             'crypt.emailaddress' => 'Zoop\GomiModule\Service\CryptEmailAddressFactory',
-                            'user' => function () {
-                                $user = new User();
-                                $user->setUsername('toby');
-                                $user->addRole('admin');
-
-                                return $user;
-                            }
                         ]
                     ],
                     'models' => [
