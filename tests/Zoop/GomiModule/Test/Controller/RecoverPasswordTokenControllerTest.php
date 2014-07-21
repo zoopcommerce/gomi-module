@@ -7,17 +7,18 @@ use Zoop\GomiModule\Test\TestAsset\TestData;
 use Zend\Http\Header\Accept;
 use Zend\Http\Header\ContentType;
 use Zend\Http\Request;
+use Zoop\Shard\Core\Events;
 use Zend\Test\PHPUnit\Controller\AbstractHttpControllerTestCase;
 
 class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 {
-    protected static $staticDcumentManager;
+    protected static $staticDocumentManager;
 
     protected static $dbDataCreated = false;
 
     public static function tearDownAfterClass()
     {
-        TestData::remove(static::$staticDcumentManager);
+        TestData::remove(static::$staticDocumentManager);
     }
 
     public function setUp()
@@ -28,8 +29,11 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         parent::setUp();
 
-        $this->documentManager = $this->getApplicationServiceLocator()->get('doctrine.odm.documentmanager.default');
-        static::$staticDcumentManager = $this->documentManager;
+        $this->documentManager = $this->getApplicationServiceLocator()->get('shard.default.modelmanager');
+        static::$staticDocumentManager = $this->documentManager;
+
+        $eventManager = self::$staticDocumentManager->getEventManager();
+        $eventManager->addEventListener(Events::EXCEPTION, $this);
 
         if (! static::$dbDataCreated) {
             //Create data in the db to query against
@@ -138,6 +142,9 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
     public function testStartRecoveryTemplate()
     {
+        $this->getRequest()
+            ->setMethod('GET');
+
         $this->dispatch('/rest/recoverpasswordtoken');
 
         $response = $this->getResponse();
@@ -184,5 +191,11 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
         $response = $this->getResponse();
         $this->assertResponseStatusCode(200);
         $this->assertTemplateName('zoop/gomi/new-password');
+    }
+
+    public function __call($name, $arguments)
+    {
+        var_dump($name, $arguments);
+        $this->calls[$name] = $arguments;
     }
 }

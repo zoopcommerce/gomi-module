@@ -5,7 +5,7 @@
  */
 namespace Zoop\GomiModule\Options;
 
-use Zoop\ShardModule\Options\JsonRestfulControllerOptions;
+use Zoop\ShardModule\Options\RestfulControllerOptions;
 use Zend\View\Renderer\PhpRenderer;
 
 /**
@@ -14,9 +14,8 @@ use Zend\View\Renderer\PhpRenderer;
  * @version $Revision$
  * @author  Tim Roediger <superdweebie@gmail.com>
  */
-class RecoverPasswordTokenControllerOptions extends JsonRestfulControllerOptions
+class RecoverPasswordTokenControllerOptions extends RestfulControllerOptions
 {
-
     protected $userClass;
 
     protected $mailTransport;

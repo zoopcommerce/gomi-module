@@ -9,7 +9,7 @@ class TestData
     public static function create($documentManager)
     {
         //Create data in the db to query against
-        $documentManager->getConnection()->selectDatabase('gomiModuleTest');
+        $documentManager->getConnection()->selectDatabase('gomi-test');
 
         $user = new User;
         $user->setUsername('toby');
@@ -17,6 +17,7 @@ class TestData
         $user->setLastName('Awesome');
         $user->setPassword('password1');
         $user->setEmail('toby@awesome.com');
+        $user->setSalt('AwesomeAwesomeAwesomeAwesomeAwesome'); //we shouldn't need this. I'm not sure why.
         $documentManager->persist($user);
         $documentManager->flush();
         $documentManager->clear();
@@ -25,9 +26,9 @@ class TestData
     public static function remove($documentManager)
     {
         //Cleanup db after all tests have run
-        $collections = $documentManager->getConnection()->selectDatabase('gomiModuleTest')->listCollections();
+        $collections = $documentManager->getConnection()->selectDatabase('gomi-test')->listCollections();
         foreach ($collections as $collection) {
-            $collection->remove(array(), array('safe' => true));
+            $collection->remove(array(), array('w' => true));
         }
     }
 }

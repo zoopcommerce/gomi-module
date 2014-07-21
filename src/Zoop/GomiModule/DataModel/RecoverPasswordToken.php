@@ -24,7 +24,6 @@ use Zoop\Shard\Annotation\Annotations as Shard;
  */
 class RecoverPasswordToken
 {
-
     /**
      * @ODM\Id(strategy="none")
      */
