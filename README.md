@@ -37,4 +37,3 @@ To begin password recovery go to:
     /rest/recoverpassword/token
 
 To complete the password recovery, follow the link in the sent email.
-
