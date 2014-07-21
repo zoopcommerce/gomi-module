@@ -11,7 +11,7 @@ return [
         'odm' => [
             'configuration' => array(
                 'default' => array(
-                    'default_db'   => 'gomiModuleTest',
+                    'default_db'   => 'gomi-test',
                     'proxy_dir'    => __DIR__ . '/Proxy',
                     'hydrator_dir' => __DIR__ . '/Hydrator',
                 )
@@ -26,10 +26,12 @@ return [
 
     'service_manager' => array(
         'factories' => array(
-            'Zoop\GomiModule\MailTransport\File' => function(){
+            'Zoop\GomiModule\MailTransport\File' => function () {
                 return new \Zend\Mail\Transport\File(new \Zend\Mail\Transport\FileOptions([
                     'path' => __DIR__ . '/email',
-                    'callback' => function(){return 'test_mail.tmp';}
+                    'callback' => function () {
+                        return 'test_mail.tmp';
+                    }
                 ]));
             },
         ),
