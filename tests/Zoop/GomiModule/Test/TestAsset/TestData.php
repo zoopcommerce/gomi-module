@@ -6,11 +6,16 @@ use Zoop\GomiModule\DataModel\User;
 
 class TestData
 {
-    public static function create($documentManager)
+    public static function create($serviceLocator, $documentManager)
     {
         //Create data in the db to query against
         $documentManager->getConnection()->selectDatabase('gomi-test');
 
+        //craete temp auth user
+        $sysUser = new User;
+        $sysUser->addRole('admin');
+        $serviceLocator->setService('user', $sysUser);
+        
         $user = new User;
         $user->setUsername('toby');
         $user->setFirstName('Toby');

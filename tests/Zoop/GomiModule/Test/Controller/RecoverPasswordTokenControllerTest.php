@@ -29,6 +29,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         parent::setUp();
 
+        $serviceLocator = $this->getApplicationServiceLocator()->get('shard.default.servicemanager');
         $this->documentManager = $this->getApplicationServiceLocator()->get('shard.default.modelmanager');
         static::$staticDocumentManager = $this->documentManager;
 
@@ -37,7 +38,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         if (! static::$dbDataCreated) {
             //Create data in the db to query against
-            TestData::create($this->documentManager);
+            TestData::create($serviceLocator, $this->documentManager);
             static::$dbDataCreated = true;
         }
     }
