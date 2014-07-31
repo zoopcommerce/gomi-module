@@ -118,12 +118,15 @@ class UnserializeListener extends ShardUnserializeListener
 
         $sysUser = new User;
         $sysUser->addRole('sys::recoverpassword');
-        $serviceLocator = $this->options->getServiceLocator();
+        $serviceLocator = $this->options->getManifest()->getServiceManager();
+        $allowOverride = $serviceLocator->getAllowOverride();
+        $serviceLocator->setAllowOverride(true);
         $serviceLocator->setService('user', $sysUser);
 
         $documentManager->remove($token);
         $documentManager->flush();
 
+        $serviceLocator->setAllowOverride($allowOverride);
         $sysUser->removeRole('sys::recoverpassword');
     }
 

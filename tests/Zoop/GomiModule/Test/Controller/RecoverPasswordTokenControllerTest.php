@@ -3,6 +3,7 @@
 namespace Zoop\GomiModule\Test\Controller;
 
 use Zoop\Shard\Crypt\Hash\BasicHashService;
+use Zoop\GomiModule\DataModel\User;
 use Zoop\GomiModule\Test\TestAsset\TestData;
 use Zend\Http\Header\Accept;
 use Zend\Http\Header\ContentType;
@@ -29,7 +30,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         parent::setUp();
 
-        $serviceLocator = $this->getApplicationServiceLocator()->get('shard.default.servicemanager');
+        $this->shardServiceLocator = $this->getApplicationServiceLocator()->get('shard.default.servicemanager');
         $this->documentManager = $this->getApplicationServiceLocator()->get('shard.default.modelmanager');
         static::$staticDocumentManager = $this->documentManager;
 
@@ -38,7 +39,7 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
 
         if (! static::$dbDataCreated) {
             //Create data in the db to query against
-            TestData::create($serviceLocator, $this->documentManager);
+            TestData::create($this->shardServiceLocator, $this->documentManager);
             static::$dbDataCreated = true;
         }
     }
@@ -84,10 +85,16 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
         $this->assertFalse(isset($result));
         $this->assertResponseStatusCode(204);
 
+        //add sys user
+        $sysUser = new User;
+        $sysUser->addRole('sys::authenticate');
+        $this->shardServiceLocator->setAllowOverride(true);
+        $this->shardServiceLocator->setService('user', $sysUser);
+        
         $user = $this->documentManager
             ->getRepository('Zoop\GomiModule\DataModel\User')
             ->findOneBy(['username' => 'toby']);
-
+        
         $basicHashService = new BasicHashService;
         $this->assertTrue($basicHashService->hashValue('newPassword1', $user->getSalt()) == $user->getPassword());
     }
@@ -133,6 +140,12 @@ class RecoverPasswordTokenControllerTest extends AbstractHttpControllerTestCase
         $this->assertFalse(isset($result));
         $this->assertResponseStatusCode(204);
 
+        //add sys user
+        $sysUser = new User;
+        $sysUser->addRole('sys::authenticate');
+        $this->shardServiceLocator->setAllowOverride(true);
+        $this->shardServiceLocator->setService('user', $sysUser);
+        
         $user = $this->documentManager
             ->getRepository('Zoop\GomiModule\DataModel\User')
             ->findOneBy(['username' => 'toby']);

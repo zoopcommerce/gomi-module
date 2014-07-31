@@ -7,6 +7,7 @@ use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceManager;
 use Zoop\GomiModule\Exception;
 use Zoop\GomiModule\Options\RecoverPasswordTokenControllerOptions;
+use Zoop\GomiModule\DataModel\User;
 
 /**
  * @author  Josh Stuart <josh.stuart@zoopcommerce.com>
@@ -98,12 +99,25 @@ trait ListenerHelperTrait
         $userRepository = $this->getDocumentManager()
             ->getRepository($this->getUserClassName());
 
+        $sysUser = new User;
+        $sysUser->addRole('sys::authenticate');
+        $serviceLocator = $this->options->getManifest()->getServiceManager();
+        $allowOverride = $serviceLocator->getAllowOverride();
+        $serviceLocator->setAllowOverride(true);
+        $serviceLocator->setService('user', $sysUser);
+        
         $user = $userRepository->findOneBy($criteria);
 
+        $sysUser->removeRole('sys::recoverpassword');
+        
         if (!isset($user)) {
+            $serviceLocator->setAllowOverride($allowOverride);
             throw new Exception\DocumentNotFoundException();
         }
 
+        $serviceLocator->setService('user', $user);
+        $serviceLocator->setAllowOverride($allowOverride);
+        
         return $user;
     }
 
