@@ -1,7 +1,7 @@
 Zoop gomi-module
 ================
 
-[![Build Status](https://api.shippable.com/projects/53f6a51bec49367903313063/badge/master)](https://www.shippable.com/projects/53f6a51bec49367903313063)
+[![Build Status](https://api.shippable.com/projects/540e7ac73479c5ea8f9eba02/badge?branchName=master)](https://app.shippable.com/projects/540e7ac73479c5ea8f9eba02/builds/latest)
 
 Provides a simple user module for use in <a href="http://zoopcommerce.github.io/shard-module">shard-module</a>.
 
